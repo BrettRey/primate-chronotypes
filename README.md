@@ -50,4 +50,16 @@ Download the four `Collective movement in wild baboons-acc-*.csv.zip` files to o
 python3 analysis/recover-baboon-sleep.py /path/to/movebank-files analysis/results/baboon-sleep-pairs.csv
 ```
 
+### Paired comparison and forecasts
+
+```sh
+Rscript analysis/fit-baboon-sleep.R
+```
+
+Models use minutes since local noon and an effect shared by animals on each night. The four specifications cross a linear calendar trend with temporary animal effects in 14-day blocks starting at the first paired date. The [estimates](analysis/results/baboon-sleep-estimates.csv) give persistent between-animal SDs and 95% profile likelihood intervals for the full record and the first 20 nights as numbered by the authors. The table includes profiling warnings.
+
+The [forecasts](analysis/results/baboon-sleep-forecasts.csv) use the same 85 pairs from the 12 latest dates for both endpoints. Each comparison adds a persistent animal effect to a baseline with the same calendar and temporary effects. Scores include RMSE and MAE for clock-time predictions and RMSE after centring errors within each night with multiple animals.
+
+In the full record, persistent SDs were 10.6–10.7 minutes for onset and 0–3.2 minutes for waking across specifications. Holding out the later dates, adding persistent animal effects changed onset RMSE by −0.9 to +2.0 minutes and left waking RMSE within 0.03 minutes of its matched baseline. Two dates accounted for 79% of the basic waking model's squared forecast error. These estimates describe one group over this recording period.
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
