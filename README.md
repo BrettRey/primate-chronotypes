@@ -30,4 +30,12 @@ Rscript analysis/titi-multiverse.R
 
 This exploratory analysis crosses common or separate cohort spreads, with or without temporary shifts within animals and cohort calendar trends. `analysis/results/titi-multiverse-*` contains the estimates, held-out forecasts, differences between models that change one choice, and recovery summaries from the 1,000 seeded pilot datasets. The figure uses the same held-out records across all eight models. The `observed` and `replay` arguments run the two stages separately.
 
+## Ten-day recording window check
+
+```sh
+Rscript analysis/check-titi-ten-day-windows.R
+```
+
+Each ten-day window is paired with an expanding earlier record ending on the same date. Both fits use the same animals and forecast the same later observations. See the [window results](analysis/results/titi-ten-day-windows.csv) and [cohort summaries](analysis/results/titi-ten-day-summary.csv).
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
