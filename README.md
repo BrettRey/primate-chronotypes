@@ -72,4 +72,12 @@ Start with 15 paired dates so that training spans two fortnights. Refit before e
 
 Across the 19 nights, adding persistent animal effects lowered onset RMSE by 0.18–0.57 minutes for clock time and 0.53–1.08 minutes for timing relative to other animals on the same night. The change in waking RMSE was within 0.20 minutes. For onset on the original late dates, the change in clock-time RMSE ranged from a 0.79-minute improvement to a 0.79-minute worsening.
 
+### Waking likelihood sensitivity
+
+```sh
+Rscript analysis/check-baboon-waking-likelihood.R
+```
+
+This check uses `glmmTMB` 1.1.15.2. It fits Gaussian and fixed Student-t residuals with 3 and 7 degrees of freedom by maximum likelihood on the same records and the same 85 held-out baboon-nights. The [comparison](analysis/results/baboon-waking-likelihood.csv) gives spread estimates, forecast scores, simulated error maxima, and optimizer diagnostics for all four waking specifications. The [likelihood grid](analysis/results/baboon-waking-likelihood-profile.csv) shows the effect of fixing the persistent standard deviation in the simplest specification. [Package documentation](https://glmmtmb.github.io/glmmTMB/reference/nbinom2.html)
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
