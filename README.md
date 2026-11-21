@@ -62,4 +62,14 @@ The [forecasts](analysis/results/baboon-sleep-forecasts.csv) use the same 85 pai
 
 In the full record, persistent SDs were 10.6–10.7 minutes for onset and 0–3.2 minutes for waking across specifications. Holding out the later dates, adding persistent animal effects changed onset RMSE by −0.9 to +2.0 minutes and left waking RMSE within 0.03 minutes of its matched baseline. Two dates accounted for 79% of the basic waking model's squared forecast error. These estimates describe one group over this recording period.
 
+### Night-by-night forecasts
+
+```sh
+Rscript analysis/check-baboon-rolling-forecasts.R
+```
+
+Start with 15 paired dates so that training spans two fortnights. Refit before each subsequent night using earlier records only. This yields 156 forecasts for each endpoint across 19 nights. The [summary](analysis/results/baboon-rolling-summary.csv) reports pooled scores and splits out the original 12 late dates. The [nightly scores](analysis/results/baboon-rolling-by-night.csv) retain the training and scoring counts for every fit.
+
+Across the 19 nights, adding persistent animal effects lowered onset RMSE by 0.18–0.57 minutes for clock time and 0.53–1.08 minutes for timing relative to other animals on the same night. The change in waking RMSE was within 0.20 minutes. For onset on the original late dates, the change in clock-time RMSE ranged from a 0.79-minute improvement to a 0.79-minute worsening.
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.

@@ -1,5 +1,10 @@
 source("analysis/simulate-titi-onset.R")
 
+baboon_specs <- expand.grid(
+  endpoint = c("onset", "waking"), trend = c(FALSE, TRUE), temporary = c(FALSE, TRUE),
+  stringsAsFactors = FALSE
+)
+
 read_baboon_nights <- function(path) {
   pairs <- read.csv(path, colClasses = c(tag = "character"))
   day <- as.Date(pairs$night_date)
@@ -57,29 +62,41 @@ baboon_estimates <- function(formula, data) {
   )
 }
 
-baboon_forecasts <- function(formula, baseline, endpoint, train, test) {
+baboon_forecast_errors <- function(formula, baseline, endpoint, train, test) {
   error <- function(formula) {
     fit <- fit_model(formula, train)
     test[[endpoint]] - predict(fit, test, allow.new.levels = TRUE)
   }
-  baseline_error <- error(baseline)
-  animal_error <- error(formula)
+  data.frame(day = test$day, animal = test$animal,
+             baseline_error = error(baseline), animal_error = error(formula))
+}
+
+baboon_forecast_scores <- function(errors) {
+  baseline_error <- errors$baseline_error
+  animal_error <- errors$animal_error
   absolute <- rmse_stats(data.frame(baseline = baseline_error^2, with_animal = animal_error^2))
-  center_by_night <- function(x) x - ave(x, test$date)
-  has_peers <- ave(rep(1L, nrow(test)), test$date, FUN = length) > 1L
+  center_by_night <- function(x) x - ave(x, errors$day)
+  has_peers <- ave(rep(1L, nrow(errors)), errors$day, FUN = length) > 1L
   relative <- rmse_stats(data.frame(
     baseline = center_by_night(baseline_error)[has_peers]^2,
     with_animal = center_by_night(animal_error)[has_peers]^2
   ))
   names(relative) <- paste0("within_night_", names(relative))
   data.frame(
-    n_train_pairs = nrow(train), first_test_night = min(test$day),
-    n_test_pairs = nrow(test), n_test_animals = length(unique(test$animal)),
-    n_test_dates = length(unique(test$date)), n_within_night_pairs = sum(has_peers),
+    n_test_pairs = nrow(errors), n_test_animals = length(unique(errors$animal)),
+    n_test_dates = length(unique(errors$day)), n_within_night_pairs = sum(has_peers),
     absolute, baseline_mae = mean(abs(baseline_error)), animal_mae = mean(abs(animal_error)),
     relative
   )
 }
+
+baboon_forecasts <- function(formula, baseline, endpoint, train, test) {
+  errors <- baboon_forecast_errors(formula, baseline, endpoint, train, test)
+  data.frame(n_train_pairs = nrow(train), first_test_night = min(test$day),
+             baboon_forecast_scores(errors))
+}
+
+baboon_late_start <- function(dates) dates[(length(dates) * 2L) %/% 3L + 1L]
 
 run_baboon_analysis <- function(input = "analysis/results/baboon-sleep-pairs.csv",
                                 output_dir = "analysis/results") {
@@ -87,16 +104,11 @@ run_baboon_analysis <- function(input = "analysis/results/baboon-sleep-pairs.csv
   # The archived analysis numbers 2012-07-31 as night 1.
   samples <- list(full = schedule, first_twenty = schedule[schedule$day < as.Date("2012-08-20"), ])
   dates <- sort(unique(schedule$day))
-  first_test <- dates[(length(dates) * 2L) %/% 3L + 1L]
+  first_test <- baboon_late_start(dates)
   train <- schedule[schedule$day < first_test, ]
   test <- schedule[schedule$day >= first_test & schedule$animal %in% train$animal, ]
-  specs <- expand.grid(
-    endpoint = c("onset", "waking"), trend = c(FALSE, TRUE), temporary = c(FALSE, TRUE),
-    stringsAsFactors = FALSE
-  )
-
-  results <- lapply(seq_len(nrow(specs)), function(i) {
-    spec <- specs[i, ]
+  results <- lapply(seq_len(nrow(baboon_specs)), function(i) {
+    spec <- baboon_specs[i, ]
     formula <- with(spec, baboon_formula(endpoint, trend, temporary))
     baseline <- with(spec, baboon_formula(endpoint, trend, temporary, persistent = FALSE))
     estimates <- lapply(names(samples), function(name) {
