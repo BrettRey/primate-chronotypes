@@ -38,4 +38,16 @@ Rscript analysis/check-titi-ten-day-windows.R
 
 Each ten-day window is paired with an expanding earlier record ending on the same date. Both fits use the same animals and forecast the same later observations. See the [window results](analysis/results/titi-ten-day-windows.csv) and [cohort summaries](analysis/results/titi-ten-day-summary.csv).
 
+## Olive baboon sleep timing
+
+The [paired endpoint table](analysis/results/baboon-sleep-pairs.csv) contains 354 baboon-nights from 22 animals across 34 night dates. We recovered the sequence reported by Loftus et al. (2022). The 506 recorded tag-nights yielded 491 classified sleep periods, 368 after the recording coverage exclusion, and 354 after the recording gap exclusion. The animals contributed between 1 and 30 paired nights, with a median of 21. Two animals contributed one night each. [Study, Figure 1 and Methods](https://doi.org/10.7554/eLife.73695)
+
+Each row identifies a tag and gives the estimated sleep onset and final waking from its longest classified sleep period. Timestamps use East Africa Time (UTC+03:00). The night date is the local calendar date at the start of the noon-to-noon interval. The script reconstructs the timing measurements from accelerometer bursts using the published workflow. [Authors' code at the retrieved revision](https://github.com/CarterLoftus/baboon_sleep/tree/5b5dff9780a1e8084a9a6aa73281d066f204e091/CODE/main_analysis)
+
+Download the four `Collective movement in wild baboons-acc-*.csv.zip` files to one directory. The script verifies each file against the archive checksum and handles the duplicate events at the three file boundaries. This command was checked with Python 3.14.10 and NumPy 2.4.2. [Movebank archive, retrieved 2026-11-21, CC0](https://doi.org/10.5441/001/1.3q2131q5)
+
+```sh
+python3 analysis/recover-baboon-sleep.py /path/to/movebank-files analysis/results/baboon-sleep-pairs.csv
+```
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
