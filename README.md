@@ -22,4 +22,12 @@ Rscript analysis/fit-titi-onset.R
 
 The authors' [plotting code](https://github.com/guadarf/Lunar-gravity-sleep/blob/a499224e6972c277cfd889e614e39e94e85d8276/1_individual_plotsAndModels.R#L812) gives onset in hours from midnight. We express it in minutes relative to the study's 06:00 lights-on schedule. [Study methods](https://doi.org/10.64898/2026.01.27.701907)
 
+## Titi onset multiverse
+
+```sh
+Rscript analysis/titi-multiverse.R
+```
+
+This exploratory analysis crosses common or separate cohort spreads, with or without temporary shifts within animals and cohort calendar trends. `analysis/results/titi-multiverse-*` contains the estimates, held-out forecasts, differences between models that change one choice, and recovery summaries from the 1,000 seeded pilot datasets. The figure uses the same held-out records across all eight models. The `observed` and `replay` arguments run the two stages separately.
+
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
