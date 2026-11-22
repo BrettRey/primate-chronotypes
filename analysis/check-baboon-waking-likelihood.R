@@ -85,7 +85,7 @@ waking_likelihood_result <- function(spec, degrees_freedom, data, train, test) {
     residual_scale = sigma(full), degrees_freedom,
     n_train_pairs = nrow(train), first_test_night = min(test$day),
     baboon_forecast_scores(errors),
-    maximum_error = max(abs(errors$animal_error)), simulated_median_maximum = median(simulations),
+    baboon_simulated_maximum_summary(errors$animal_error, simulations),
     full_objective = full$fit$objective, forecast_objective = earlier$fit$objective,
     baseline_objective = comparison$fit$objective,
     full_positive_hessian = isTRUE(full$sdr$pdHess),

@@ -1,4 +1,5 @@
 source("analysis/fit-baboon-sleep.R")
+source("analysis/primate-figure-style.R")
 
 results <- "analysis/results"
 windows <- read.csv(file.path(results, "titi-ten-day-windows.csv"))
@@ -27,39 +28,43 @@ gaussian_error_check <- function(fit, observed) {
     night_errors <- rnorm(n_dates, sd = night_sd)[date_index]
     max(abs(night_errors + rnorm(nrow(test), sd = sigma(fit))))
   })
-  c(observed_maximum = max(abs(observed)), simulated_median_maximum = median(maxima))
+  baboon_simulated_maximum_summary(observed, maxima)
 }
 
-draw_diagnostics <- function(path) {
-  png(path, width = 2020, height = 1270, res = 170, type = "cairo", bg = "white")
-  on.exit(dev.off())
-  layout(matrix(1:2, ncol = 1), heights = c(0.82, 1.18))
+draw_diagnostics <- function(family) {
+  layout(matrix(1:2, ncol = 1), heights = c(0.98, 1.18))
   ink <- "#17232D"
   muted <- "#52616E"
   grid <- "#DFE5E9"
   colours <- c("#1A638D", "#A34A13")
-  par(family = "sans", cex = 0.9, mgp = c(2.2, 0.55, 0), tcl = -0.3)
+  window_blue <- adjustcolor(colours[1L], alpha.f = 0.5)
+  primate_figure_text(family)
 
-  par(mar = c(4.0, 6.3, 3.3, 1.2))
-  plot(NA_real_, xlim = extendrange(windows$spread_change, f = 0.06), ylim = c(0.6, 2.55),
+  par(mai = c(0.61, 0.78, 0.40, 0.14))
+  plot(NA_real_, xlim = extendrange(windows$spread_change, f = 0.06), ylim = c(0.6, 2.95),
        xlab = "Ten-day minus longer-record spread (minutes)", ylab = "", axes = FALSE)
   abline(h = 1:2, col = grid)
-  abline(v = 0, lty = 2, col = muted)
+  segments(0, 0.6, 0, 2.23, lty = 2, col = muted)
   axis(1, col = muted, col.axis = ink)
   axis(2, at = 2:1, labels = c("2023 (45)", "2024 (78)"), las = 1, tick = FALSE, col.axis = ink)
   title(main = "Titi activity onset across matched recording windows", adj = 0, col.main = ink)
-  for (i in seq_along(colours)) {
-    delta <- windows$spread_change[windows$cohort == c(2023L, 2024L)[i]]
+  cohorts <- c(2023L, 2024L)
+  for (i in seq_along(cohorts)) {
+    delta <- windows$spread_change[windows$cohort == cohorts[i]]
     row <- 3L - i
     set.seed(829L + i)
-    points(delta, row + runif(length(delta), -0.13, 0.13),
-           pch = 16, cex = 0.75, col = adjustcolor(colours[i], alpha.f = 0.5))
+    points(delta, row + runif(length(delta), -0.13, 0.13), pch = 16,
+           cex = 0.75, col = window_blue)
     interval <- quantile(delta, c(0.1, 0.5, 0.9))
-    segments(interval[1L], row - 0.24, interval[3L], row - 0.24, col = colours[i], lwd = 2)
-    points(interval[2L], row - 0.24, pch = 18, col = colours[i], cex = 1.22)
+    segments(interval[1L], row - 0.24, interval[3L], row - 0.24, col = colours[1L], lwd = 2)
+    primate_median_ticks(interval[2L], row - 0.24, col = colours[2L])
   }
+  legend("topright", legend = c("Matched window", "Median", "10th–90th percentile"),
+         pch = c(16, 124, NA), lty = c(NA, NA, 1), lwd = c(NA, NA, 2),
+         col = c(window_blue, colours[2L], colours[1L]), pt.cex = c(0.75, 0.60, 1),
+         horiz = TRUE, bty = "n", text.col = ink, cex = 0.92)
 
-  par(mar = c(4.0, 6.3, 3.3, 1.2))
+  par(mai = c(0.61, 0.78, 0.40, 0.14))
   dates <- sort(unique(test$day))
   ndates <- length(dates)
   y_range <- extendrange(unlist(lapply(errors, `[[`, "animal_error")), f = 0.1)
@@ -76,10 +81,26 @@ draw_diagnostics <- function(path) {
            col = adjustcolor(colours[i], alpha.f = 0.65))
   }
   legend("bottomright", legend = c("Sleep onset", "Final waking"), col = colours,
-         pch = c(17, 15), horiz = TRUE, bty = "n", text.col = ink)
+         pch = c(17, 15), horiz = TRUE, bty = "n", text.col = ink, cex = 0.9)
 }
 
-draw_diagnostics(file.path(results, "primate-timing-diagnostics.png"))
-print(t(vapply(endpoints, function(endpoint) {
-  gaussian_error_check(fits[[endpoint]], errors[[endpoint]]$animal_error)
-}, numeric(2L))))
+render_primate_figure(file.path(results, "primate-timing-diagnostics"), draw_diagnostics,
+                      width = 7.3, height = 4.86)
+maxima <- do.call(rbind, lapply(endpoints, function(endpoint) {
+  data.frame(endpoint, gaussian_error_check(fits[[endpoint]], errors[[endpoint]]$animal_error))
+}))
+write.csv(maxima, file.path(results, "baboon-gaussian-error-maxima.csv"), row.names = FALSE)
+print(maxima)
+
+waking_by_date <- split(errors$waking$animal_error, errors$waking$day)
+total_sq_error <- sum(errors$waking$animal_error^2)
+concentration <- do.call(rbind, lapply(names(waking_by_date), function(day) {
+  e <- waking_by_date[[day]]
+  largest <- e[which.max(abs(e))]
+  nightly_sq_error <- sum(e^2)
+  data.frame(day, n_records = length(e), largest_signed_error = largest,
+             night_share_of_total_sq_error = nightly_sq_error / total_sq_error,
+             largest_share_of_night_sq_error = largest^2 / nightly_sq_error)
+}))
+write.csv(concentration, file.path(results, "baboon-fixed-waking-error-concentration.csv"),
+          row.names = FALSE)

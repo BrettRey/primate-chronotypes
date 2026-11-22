@@ -1,4 +1,4 @@
-"""Recover the sleep-period endpoints from the 2012 Movebank ACC archive."""
+"""Recover baboon sleep-period endpoints from the 2012 or Laikipia ACC archive."""
 
 import argparse
 import csv
@@ -21,6 +21,8 @@ ARCHIVE_PARTS = (
     ("5902b97dde332b2f352a43e72e3f5d3c", "2012-09-05"),
 )
 LOCAL_OFFSET = timedelta(hours=3)
+LAIKIPIA_MD5 = "58249568cfe7c09d1dd953aaf18c1242"
+LAIKIPIA_MEMBER = "Leopards vervets and baboons in Laikipia Kenya_part-acc.csv"
 SOURCE_GRID = np.linspace(0, 1, 13)[:12]
 DAYTIME_GRID = np.arange(10) / 10
 
@@ -68,8 +70,9 @@ def log_vedba(samples):
     # Average the norm of the three dynamic axes, each centred by its own
     # seven-sample moving mean. The window shrinks at either edge.
     cumulative = np.pad(samples.cumsum(axis=1), ((0, 0), (1, 0), (0, 0)))
-    index = np.arange(26)
-    left, right = np.maximum(index - 3, 0), np.minimum(index + 4, 26)
+    n_samples = samples.shape[1]
+    index = np.arange(n_samples)
+    left, right = np.maximum(index - 3, 0), np.minimum(index + 4, n_samples)
     static = (cumulative[:, right] - cumulative[:, left]) / (right - left)[None, :, None]
     with np.errstate(divide="ignore"):
         return np.log(np.linalg.norm(samples - static, axis=2).mean(axis=1))
@@ -104,6 +107,51 @@ def read_minutes(directory):
             if batch:
                 minutes.update(zip(batch_keys, log_vedba(np.stack(batch))))
         print(f"Read {path.name} ({len(minutes):,} usable minutes so far)", flush=True)
+    return minutes
+
+
+def read_laikipia_minutes(path):
+    with path.open("rb") as source:
+        if hashlib.file_digest(source, "md5").hexdigest() != LAIKIPIA_MD5:
+            raise ValueError(f"Movebank checksum differs for {path}")
+
+    minutes = {}
+    skipped_bursts = skipped_illness = 0
+    batch, keys = [], []
+
+    def flush():
+        if len(set(keys)) != len(keys) or any(key in minutes for key in keys):
+            raise ValueError("Repeated Laikipia animal-minute")
+        minutes.update(zip(keys, log_vedba(np.stack(batch))))
+        keys.clear()
+        batch.clear()
+
+    with ZipFile(path) as archive, TextIOWrapper(archive.open(LAIKIPIA_MEMBER), newline="") as source:
+        reader = csv.DictReader(source)
+        for row in reader:
+            tag, minute = row["individual-local-identifier"], row["timestamp"][:16]
+            if not tag or row["individual-taxon-canonical-name"] != "Papio anubis":
+                raise ValueError("Unexpected Laikipia animal identifier or taxon")
+            # The study discards this animal's records from 28 May local time.
+            if tag == "Pa LI TH" and minute >= "2014-05-27 21:00":
+                skipped_illness += 1
+                continue
+            samples = np.fromstring(row["eobs:accelerations-raw"], sep=" ")
+            if samples.size != 120:
+                skipped_bursts += 1
+                continue
+            if row["eobs:acceleration-axes"] != "XYZ" or not np.all(np.isfinite(samples)):
+                raise ValueError(f"Invalid Laikipia acceleration burst for {tag} at {minute}")
+            keys.append((tag, minute))
+            batch.append(samples.reshape(40, 3))
+            if len(batch) == 10000:
+                flush()
+        if batch:
+            flush()
+
+    print(f"Read {len(minutes):,} minutes from {path.name}, "
+          f"excluding {skipped_bursts:,} incomplete bursts and "
+          f"{skipped_illness:,} minutes under the source illness exclusion", flush=True)
     return minutes
 
 
@@ -158,10 +206,12 @@ def summarize(minutes):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("movebank_directory", type=Path)
+    parser.add_argument("movebank_path", type=Path, help="2012 directory or Laikipia acceleration ZIP")
     parser.add_argument("output", type=Path)
+    parser.add_argument("--laikipia", action="store_true", help="Read the 2014–2015 archive")
     args = parser.parse_args()
-    rows = summarize(read_minutes(args.movebank_directory))
+    read = read_laikipia_minutes if args.laikipia else read_minutes
+    rows = summarize(read(args.movebank_path))
     with args.output.open("w", newline="") as destination:
         writer = csv.writer(destination, lineterminator="\n")
         writer.writerow(("tag", "night_date", "onset_local", "waking_local", "n_bursts"))

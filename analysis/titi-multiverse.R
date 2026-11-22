@@ -79,12 +79,14 @@ forecast_summary <- function(spec, training, test, baseline_errors) {
   model <- fit_model(model_formula(spec), training)
   prediction <- predict(model, test, allow.new.levels = TRUE)
   errors <- data.frame(cohort = test$cohort, animal = test$animal, baseline = baseline_errors,
-                       with_animal = (test$onset - prediction)^2)
+                       with_animal = test$onset - prediction)
   choices <- c(list(pooled = errors), split(errors, errors$cohort))
   do.call(rbind, lapply(names(choices), function(cohort) {
     sample <- choices[[cohort]]
     data.frame(spec, cohort = cohort, n_animals = length(unique(sample$animal)),
-               n_records = nrow(sample), rmse_stats(sample),
+               n_records = nrow(sample),
+               rmse_stats(data.frame(baseline = sample$baseline^2, with_animal = sample$with_animal^2)),
+               baseline_mae = mean(abs(sample$baseline)), animal_mae = mean(abs(sample$with_animal)),
                zero_variance = effect_scales(model)$zero_variance, row.names = NULL)
   }))
 }
@@ -128,7 +130,7 @@ run_observed <- function() {
   calendars <- unique(specifications$calendar)
   baselines <- setNames(lapply(calendars, function(calendar) {
     base <- fit_model(model_formula(list(calendar = calendar), include_animals = FALSE), train)
-    (test$onset - predict(base, test, allow.new.levels = TRUE))^2
+    test$onset - predict(base, test, allow.new.levels = TRUE)
   }), calendars)
 
   observed <- lapply(seq_len(nrow(specifications)), function(i) {
@@ -148,57 +150,37 @@ run_observed <- function() {
 }
 
 plot_observed <- function() {
-  estimates <- read.csv(file.path(output_dir, "titi-multiverse-estimates.csv"))
+  source("analysis/primate-figure-style.R")
   forecasts <- read.csv(file.path(output_dir, "titi-multiverse-forecasts.csv"))
-  forecasts <- forecasts[forecasts$cohort == "pooled", ]
-  labels <- with(specifications, paste(spec,
-    paste(ifelse(spread == "common", "Common", "Separate"),
-          ifelse(temporary == "none", "stable", "fortnight"),
-          ifelse(calendar == "date", "dates", "trend"), sep = " / ")))
-  rows <- setNames(rev(seq_len(nrow(specifications))), specifications$spec)
-  cohorts <- c("common", "2023", "2024")
-  palette <- setNames(c("#313841", "#245C9E", "#AB481F"), cohorts)
-  symbols <- setNames(c(16, 17, 15), cohorts)
-  offsets <- setNames(c(0, 0.15, -0.15), cohorts)
+  forecasts <- subset(forecasts, cohort == "pooled")
+  forecasts <- forecasts[match(specifications$spec, forecasts$spec), ]
+  stopifnot(nrow(forecasts) == 8L, all(forecasts$n_records == 325L))
+  labels <- with(forecasts, paste0(ifelse(spread == "common", "Common", "By cohort"),
+    ", date", ifelse(calendar == "date_and_trend", " + trend", ""),
+    ifelse(temporary == "fortnight", " + fortnight", "")))
+  rows <- rev(seq_len(nrow(forecasts)))
+  ink <- "#2D2D2D"
+  blue <- "#2E5077"
+  muted <- "#737373"
 
-  png(file.path(output_dir, "titi-multiverse.png"), width = 1800, height = 1000,
-      res = 160, type = "cairo", bg = "white")
-  on.exit(dev.off())
-  layout(matrix(1:2, nrow = 1L), widths = c(1.65, 1))
-  par(oma = c(2, 0, 3, 0))
-
-  par(mar = c(4, 14, 2, 1))
-  upper <- max(estimates$persistent_sd, estimates$upper_95, na.rm = TRUE)
-  plot(NA, xlim = c(0, upper * 1.06), ylim = c(0.12, 8.6), xlab = "Minutes",
-       ylab = "", yaxt = "n", bty = "n")
-  abline(h = rows, col = "#E4E8ED")
-  axis(2, at = rows, labels = labels, las = 1, tick = FALSE, cex.axis = 0.79)
-  y <- unname(rows[estimates$spec] + offsets[estimates$cohort])
-  segments(estimates$lower_95, y, estimates$upper_95, y,
-           lwd = 2, col = palette[estimates$cohort])
-  points(estimates$persistent_sd, y, pch = symbols[estimates$cohort],
-         col = palette[estimates$cohort], cex = 1.15)
-  title("Estimated persistent spread", adj = 0)
-  legend("bottomright", legend = c("Common", "2023", "2024"), horiz = TRUE,
-         pch = symbols, col = palette, bty = "n", cex = 0.73)
-
-  par(mar = c(4, 1.1, 2, 1.3))
-  x_range <- extendrange(c(forecasts$baseline_rmse, forecasts$animal_rmse), f = 0.12)
-  plot(NA, xlim = x_range, ylim = c(0.12, 8.6), xlab = "RMSE in minutes",
-       ylab = "", yaxt = "n", bty = "n")
-  abline(h = rows, col = "#E4E8ED")
-  y <- unname(rows[forecasts$spec])
-  segments(forecasts$baseline_rmse, y - 0.12, forecasts$animal_rmse, y + 0.12,
-           col = "#86939D", lwd = 1.5)
-  points(forecasts$baseline_rmse, y - 0.12, pch = 1, col = "#54616C", cex = 1.15)
-  points(forecasts$animal_rmse, y + 0.12, pch = 16, col = "#1D7370", cex = 1.15)
-  title("Forecasts on later dates", adj = 0)
-  legend("bottomright", legend = c("Matched baseline", "Animal model"), horiz = TRUE,
-         pch = c(1, 16), col = c("#54616C", "#1D7370"), bty = "n", cex = 0.73)
-  mtext("Titi monkey activity onset across eight specifications", side = 3, outer = TRUE,
-        line = 1, adj = 0.04, font = 2, cex = 1.15)
-  mtext("Left: 95% profile likelihood intervals. Right: same 325 held-out observations in every specification.",
-        side = 1, outer = TRUE, line = 0.5, adj = 0.04, cex = 0.75)
+  draw <- function(family) {
+    primate_figure_text(family)
+    par(mai = c(0.59, 1.96, 0.38, 0.22))
+    ticks <- pretty(c(forecasts$baseline_rmse, forecasts$animal_rmse), n = 6)
+    plot(NA_real_, xlim = range(ticks), ylim = c(0.45, 9.25), xaxs = "i", yaxs = "i",
+         xlab = "Fixed-holdout RMSE (minutes)", ylab = "", axes = FALSE)
+    abline(h = rows, col = "#E8E8E8")
+    axis(1, at = ticks, col = ink, col.axis = ink)
+    axis(2, at = rows, labels = labels, las = 1, tick = FALSE, col.axis = ink)
+    segments(forecasts$baseline_rmse, rows, forecasts$animal_rmse, rows, col = muted, lwd = 1.3)
+    points(forecasts$baseline_rmse, rows, pch = 22, cex = 1.15, bg = "white", col = ink)
+    points(forecasts$animal_rmse, rows, pch = 16, cex = 1.1, col = blue)
+    title("Titi activity-onset forecasts", adj = 0, line = 0.8, col.main = ink)
+    legend("topright", legend = c("Matched baseline", "Animal model"),
+           pch = c(22, 16), pt.bg = c("white", blue), pt.cex = c(1.15, 1.1),
+           col = c(ink, blue), horiz = TRUE, bty = "n", cex = 0.88)
+  }
+  render_primate_figure(file.path(output_dir, "titi-multiverse"), draw, width = 7.3, height = 4.0)
 }
 
 simulation_attempt <- function(spec, formula, schedule, seed) {

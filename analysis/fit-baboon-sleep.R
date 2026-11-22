@@ -5,10 +5,9 @@ baboon_specs <- expand.grid(
   stringsAsFactors = FALSE
 )
 
-read_baboon_nights <- function(path) {
+read_baboon_nights <- function(path, local_zone = "Africa/Nairobi") {
   pairs <- read.csv(path, colClasses = c(tag = "character"))
   day <- as.Date(pairs$night_date)
-  local_zone <- "Africa/Nairobi"
   noon <- as.POSIXct(paste(day, "12:00:00"), tz = local_zone)
   minutes_since_noon <- function(timestamp) {
     as.numeric(difftime(as.POSIXct(timestamp, tz = local_zone), noon, units = "mins"))
@@ -97,6 +96,13 @@ baboon_forecasts <- function(formula, baseline, endpoint, train, test) {
 }
 
 baboon_late_start <- function(dates) dates[(length(dates) * 2L) %/% 3L + 1L]
+
+baboon_simulated_maximum_summary <- function(observed, simulations) {
+  quantiles <- quantile(simulations, c(0.025, 0.5, 0.975, 0.99), names = FALSE)
+  data.frame(maximum_error = max(abs(observed)), n_simulations = length(simulations),
+             simulated_q025_maximum = quantiles[1L], simulated_median_maximum = quantiles[2L],
+             simulated_q975_maximum = quantiles[3L], simulated_q99_maximum = quantiles[4L])
+}
 
 run_baboon_analysis <- function(input = "analysis/results/baboon-sleep-pairs.csv",
                                 output_dir = "analysis/results") {

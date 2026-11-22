@@ -1,3 +1,5 @@
+source("analysis/primate-figure-style.R")
+
 results <- "analysis/results"
 titi <- read.csv(file.path(results, "titi-multiverse-estimates.csv"))
 titi_forecasts <- subset(read.csv(file.path(results, "titi-multiverse-forecasts.csv")), cohort == "pooled")
@@ -32,11 +34,9 @@ panel <- function(labels, xlim, ticks, xlab, title = "", reference = FALSE) {
   if (nzchar(title)) title(main = title, adj = 0, line = 1.15, col.main = ink)
 }
 
-draw_summary <- function(path) {
-  png(path, width = 2160, height = 1370, res = 175, type = "cairo", bg = "white")
-  on.exit(dev.off())
+draw_summary <- function(family) {
   layout(matrix(1:4, byrow = TRUE, nrow = 2), widths = c(1.5, 1), heights = c(1.55, 1))
-  par(family = "sans", cex = 0.91, mgp = c(2, 0.55, 0), tcl = -0.28)
+  primate_figure_text(family)
   spread_xlim <- c(-0.4, 27)
   gain_xlim <- c(-2.15, 1.25)
   spread_ticks <- seq(0, 25, by = 5)
@@ -55,14 +55,14 @@ draw_summary <- function(path) {
   titi_col <- c(ink, blue, amber)
   titi_pch <- c(16, 17, 15)
 
-  par(mar = c(4.0, 14.0, 3.5, 1.0))
+  par(mai = c(0.61, 1.96, 0.43, 0.12))
   panel(ti$label, spread_xlim, spread_ticks, "Between-animal SD (minutes)", "Titi activity onset")
   segments(titi$lower_95, ty, titi$upper_95, ty, col = titi_col[ci], lwd = 1.6)
   points(titi$persistent_sd, ty, pch = titi_pch[ci], col = titi_col[ci], cex = 0.9)
   legend("topright", legend = c("Common", "2023", "2024"),
-         pch = titi_pch, col = titi_col, horiz = TRUE, bty = "n", text.col = ink, cex = 0.86)
+         pch = titi_pch, col = titi_col, horiz = TRUE, bty = "n", text.col = ink, cex = 0.9)
 
-  par(mar = c(4.0, 1.2, 3.5, 1.2))
+  par(mai = c(0.61, 0.16, 0.43, 0.18))
   panel(rep("", nrow(ti)), gain_xlim, gain_ticks, "Forecast RMSE gain (minutes)",
         "Later dates, 325 observations", reference = TRUE)
   points(ti$rmse_gain, ti_y[ti$spec], col = ink, pch = 16)
@@ -79,16 +79,16 @@ draw_summary <- function(path) {
       c(0.15, -0.15)[endpoint_index(data$endpoint)]
   }
 
-  par(mar = c(4.0, 14.0, 3.5, 1.0))
+  par(mai = c(0.61, 1.96, 0.43, 0.12))
   panel(ba$label, spread_xlim, spread_ticks, "Between-animal SD (minutes)", "Baboon sleep timing")
   bi <- endpoint_index(baboon$endpoint)
   by <- baboon_positions(baboon)
   segments(baboon$animal_lower_95, by, baboon$animal_upper_95, by, col = endpoint_col[bi], lwd = 1.6)
   points(baboon$animal_sd, by, pch = endpoint_pch[bi], col = endpoint_col[bi], cex = 0.9)
   legend("topright", legend = c("Sleep onset", "Final waking"),
-         pch = endpoint_pch, col = endpoint_col, horiz = TRUE, bty = "n", text.col = ink, cex = 0.86)
+         pch = endpoint_pch, col = endpoint_col, horiz = TRUE, bty = "n", text.col = ink, cex = 0.9)
 
-  par(mar = c(4.0, 1.2, 3.5, 1.2))
+  par(mai = c(0.61, 0.16, 0.43, 0.18))
   panel(rep("", nrow(ba)), gain_xlim, gain_ticks, "Forecast RMSE gain (minutes)",
         "Later dates, 85 baboon-nights", reference = TRUE)
   fi <- endpoint_index(baboon_forecasts$endpoint)
@@ -96,4 +96,5 @@ draw_summary <- function(path) {
          pch = endpoint_pch[fi], col = endpoint_col[fi], cex = 0.9)
 }
 
-draw_summary(file.path(results, "primate-timing-summary.png"))
+render_primate_figure(file.path(results, "primate-timing-summary"), draw_summary,
+                      width = 7.3, height = 5.0)

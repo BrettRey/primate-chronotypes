@@ -72,6 +72,16 @@ Start with 15 paired dates so that training spans two fortnights. Refit before e
 
 Across the 19 nights, adding persistent animal effects lowered onset RMSE by 0.18–0.57 minutes for clock time and 0.53–1.08 minutes for timing relative to other animals on the same night. The change in waking RMSE was within 0.20 minutes. For onset on the original late dates, the change in clock-time RMSE ranged from a 0.79-minute improvement to a 0.79-minute worsening.
 
+The rolling tables also report paired MSE gains for the clock-time and night-centred scores on exactly the records with multiple animals per night. [Supporting comparison](notes/forecast-diagnostics.md#rolling-forecast-scores)
+
+### Historical timing benchmarks
+
+```sh
+Rscript analysis/check-primate-forecast-benchmarks.R
+```
+
+The script scores training-only means and medians on the same fixed and rolling holdouts as the models. It checks that the late rolling subset contains exactly the fixed baboon animal-nights. [Benchmark scores](analysis/results/primate-forecast-benchmarks.csv) · [Supporting table](notes/forecast-diagnostics.md#historical-forecast-benchmarks)
+
 ### Waking likelihood sensitivity
 
 ```sh
@@ -79,5 +89,37 @@ Rscript analysis/check-baboon-waking-likelihood.R
 ```
 
 This check uses `glmmTMB` 1.1.15.2. It fits Gaussian and fixed Student-t residuals with 3 and 7 degrees of freedom by maximum likelihood on the same records and the same 85 held-out baboon-nights. The [comparison](analysis/results/baboon-waking-likelihood.csv) gives spread estimates, forecast scores, simulated error maxima, and optimizer diagnostics for all four waking specifications. The [likelihood grid](analysis/results/baboon-waking-likelihood-profile.csv) shows the effect of fixing the persistent standard deviation in the simplest specification. [Package documentation](https://glmmtmb.github.io/glmmTMB/reference/nbinom2.html)
+
+### Morning neighbour activity pilot
+
+Download the four `Collective movement in wild baboons-gps-*.csv.zip` files into the same directory as the four accelerometry parts. The preparation script verifies all eight archive checksums. The forecast script uses R with `lme4` and `suncalc` (checked with versions 2.0.6 and 0.5.4). [Movebank archive](https://doi.org/10.5441/001/1.3q2131q5)
+
+```sh
+python3 analysis/prepare-baboon-waking-neighbours.py /path/to/movebank-files analysis/results/baboon-waking-neighbour-inputs.csv
+Rscript analysis/check-baboon-waking-neighbours.R
+```
+
+For a forecast at 06:05 local time, use the first ten distinct GPS fixes before 06:02 and the mean log VeDBA at 06:02–06:04. The baseline uses time since astronomical dawn, focal motion, and an animal random intercept. Nested models add mean peer motion and a distance-weighted peer mean centred on the unweighted mean, with exponential distance scales of 15 and 30 m. Both peer summaries use the same observed collars and exclude the focal animal. Fit on earlier dates and score later waking times for previously recorded animals, starting after the first 15 paired dates.
+
+Of 170 classified endpoints later than 06:05, 154 had matching telemetry. All four models scored the same 56 later-date wakes across 17 nights. Mean absolute error was 11.58 min in the baseline, 11.87 min with mean peer motion, and 11.82–11.83 min with distance weighting. The forecast target is restricted in hindsight to late endpoints from one troop. [Matched records](analysis/results/baboon-waking-neighbour-inputs.csv) · [Forecast summary](analysis/results/baboon-waking-neighbour-summary.csv) · [Scores by night](analysis/results/baboon-waking-neighbour-by-night.csv)
+
+### Paper figures
+
+Install EB Garamond and use an R build with Cairo support. Run these commands from the repository root. They write vector PDFs and 300 DPI PNGs to `analysis/results/`.
+
+```sh
+Rscript analysis/plot-primate-timing-summary.R
+Rscript analysis/plot-primate-timing-diagnostics.R
+Rscript analysis/plot-primate-timing-supplement.R
+Rscript analysis/titi-multiverse.R plot
+```
+
+The diagnostics command also writes [Gaussian simulated maximum-error quantiles](analysis/results/baboon-gaussian-error-maxima.csv) and [waking loss concentration by night](analysis/results/baboon-fixed-waking-error-concentration.csv).
+
+The main paper displays observed timing by date and the multiverse estimates and gains. The supplement shows the simulated spread estimates, absolute titi forecast errors, recording windows, and baboon errors by night. [Observed timings](notes/paper-draft.md#records-and-timing-measures) · [Supporting figures](notes/forecast-diagnostics.md)
+
+## Comparative waking follow-up
+
+The Laikipia replication reconstructs waking from a later olive baboon archive and compares estimates and forecasts with and without troop effects. The Tibetan macaque analysis uses waking scored from video. The [feasibility notes](notes/comparative-waking-feasibility.md#replication-and-video-comparison) give the measurement definitions, source files, results, and reproduction commands.
 
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.
