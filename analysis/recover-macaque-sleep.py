@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import hashlib
 from io import BytesIO
 from pathlib import Path
+from runpy import run_path
 from zipfile import ZipFile
 
 from openpyxl import load_workbook
@@ -39,7 +40,7 @@ def read_periods(path):
     return periods
 
 
-def recover(periods):
+def recover(periods, bout_periods=None):
     one_minute = timedelta(minutes=1)
     results = {}
     for period, rows in periods.items():
@@ -54,7 +55,16 @@ def recover(periods):
         key = (animals[0], (waking - timedelta(hours=12)).date())
         if key in results:
             raise ValueError(f"Repeated animal-night {key}")
-        results[key] = (onset, waking, int((stamps[-1] - waking) / one_minute))
+        row = (onset, waking, int((stamps[-1] - waking) / one_minute))
+        if bout_periods is not None:
+            candidates = bout_periods(stamps, states)
+            if not candidates:
+                row += (None, None, None)
+            else:
+                _, longest_end = max(candidates, key=lambda p: p[1] - p[0])
+                last_end = candidates[-1][1]
+                row += (longest_end, int((waking - longest_end) / one_minute), last_end)
+        results[key] = row
     return [(animal, date, *results[animal, date]) for animal, date in sorted(results)]
 
 
@@ -62,11 +72,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("supplement_zip", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--compare-endpoints", action="store_true",
+                        help="Also apply the baboon bout-selection rules to the video scores")
     args = parser.parse_args()
-    rows = recover(read_periods(args.supplement_zip))
+    header = ("tag", "night_date", "onset_local", "waking_local", "minutes_after_waking")
+    bout_periods = None
+    if args.compare_endpoints:
+        classifier = run_path(str(Path(__file__).with_name("recover-baboon-sleep.py")))
+        bout_periods = classifier["sleep_periods_from_states"]
+        header += ("longest_period_end_local", "minutes_earlier", "last_qualifying_period_end_local")
+    rows = recover(read_periods(args.supplement_zip), bout_periods)
     with args.output.open("w", newline="") as destination:
         writer = csv.writer(destination, lineterminator="\n")
-        writer.writerow(("tag", "night_date", "onset_local", "waking_local", "minutes_after_waking"))
+        writer.writerow(header)
         writer.writerows(rows)
     print(f"Recovered {len(rows)} scored macaque animal-nights.")
 

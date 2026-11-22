@@ -110,7 +110,7 @@ def read_minutes(directory):
     return minutes
 
 
-def read_laikipia_minutes(path):
+def read_laikipia_minutes(path, selected_minutes=None):
     with path.open("rb") as source:
         if hashlib.file_digest(source, "md5").hexdigest() != LAIKIPIA_MD5:
             raise ValueError(f"Movebank checksum differs for {path}")
@@ -130,6 +130,8 @@ def read_laikipia_minutes(path):
         reader = csv.DictReader(source)
         for row in reader:
             tag, minute = row["individual-local-identifier"], row["timestamp"][:16]
+            if selected_minutes is not None and (tag, minute) not in selected_minutes:
+                continue
             if not tag or row["individual-taxon-canonical-name"] != "Papio anubis":
                 raise ValueError("Unexpected Laikipia animal identifier or taxon")
             # The study discards this animal's records from 28 May local time.
@@ -155,23 +157,32 @@ def read_laikipia_minutes(path):
     return minutes
 
 
-def endpoints(timestamps, log_activity):
-    if len(timestamps) < 9:
-        return None
-    smoothed = np.median(np.lib.stride_tricks.sliding_window_view(log_activity, 9), axis=1)
-    inactive = smoothed < 1.125 * np.quantile(smoothed, 0.10)
-    edges = np.flatnonzero(np.diff(np.r_[False, inactive, False]))
+def sleep_periods_from_states(timestamps, asleep):
+    edges = np.flatnonzero(np.diff(np.r_[False, np.asarray(asleep, dtype=bool), False]))
     periods = []
     for start, end in edges.reshape(-1, 2):
         if end - start <= 30:
             continue
         # The R code indexes the first epoch after the block as its endpoint.
-        begin, finish = timestamps[start + 4], timestamps[end + 4]
+        begin, finish = timestamps[start], timestamps[end]
         if periods and begin - periods[-1][1] < timedelta(minutes=45):
             periods[-1] = (periods[-1][0], finish)
         else:
             periods.append((begin, finish))
-    return max(periods, key=lambda p: p[1] - p[0], default=None)
+    return periods
+
+
+def sleep_periods(timestamps, log_activity):
+    if len(timestamps) < 9:
+        return []
+    smoothed = np.median(np.lib.stride_tricks.sliding_window_view(log_activity, 9), axis=1)
+    inactive = smoothed < 1.125 * np.quantile(smoothed, 0.10)
+    # Keep the minute after the last centred epoch available as an endpoint.
+    return sleep_periods_from_states(timestamps[4:-3], inactive)
+
+
+def endpoints(timestamps, log_activity):
+    return max(sleep_periods(timestamps, log_activity), key=lambda p: p[1] - p[0], default=None)
 
 
 def summarize(minutes):

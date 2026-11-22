@@ -85,7 +85,7 @@ draw_summary <- function(family) {
   by <- baboon_positions(baboon)
   segments(baboon$animal_lower_95, by, baboon$animal_upper_95, by, col = endpoint_col[bi], lwd = 1.6)
   points(baboon$animal_sd, by, pch = endpoint_pch[bi], col = endpoint_col[bi], cex = 0.9)
-  legend("topright", legend = c("Sleep onset", "Final waking"),
+  legend("topright", legend = c("Period onset", "Period end"),
          pch = endpoint_pch, col = endpoint_col, horiz = TRUE, bty = "n", text.col = ink, cex = 0.9)
 
   par(mai = c(0.61, 0.16, 0.43, 0.18))

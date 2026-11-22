@@ -1,0 +1,4 @@
+"step","paired_nights","nights_earlier","lower_quartile","median","upper_quartile","maximum"
+"bout_processing",287,206,0,40,74.5,486
+"longest_selection",287,182,0,181,341,601
+"combined",287,257,54,253,418,640

@@ -255,12 +255,14 @@ run_replay <- function() {
                   nrow(unique(problems[c("spec", "seed")]))))
 }
 
-mode <- commandArgs(trailingOnly = TRUE)
-if (!length(mode)) mode <- "all"
-if (length(mode) != 1L || !mode %in% c("all", "observed", "replay", "plot")) {
-  stop("Usage: Rscript analysis/titi-multiverse.R [all|observed|replay|plot]")
+if (sys.nframe() == 0L) {
+  mode <- commandArgs(trailingOnly = TRUE)
+  if (!length(mode)) mode <- "all"
+  if (length(mode) != 1L || !mode %in% c("all", "observed", "replay", "plot")) {
+    stop("Usage: Rscript analysis/titi-multiverse.R [all|observed|replay|plot]")
+  }
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  if (mode %in% c("all", "observed")) run_observed()
+  if (mode %in% c("all", "observed", "plot")) plot_observed()
+  if (mode %in% c("all", "replay")) run_replay()
 }
-dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
-if (mode %in% c("all", "observed")) run_observed()
-if (mode %in% c("all", "observed", "plot")) plot_observed()
-if (mode %in% c("all", "replay")) run_replay()

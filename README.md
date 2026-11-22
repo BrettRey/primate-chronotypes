@@ -118,8 +118,10 @@ The diagnostics command also writes [Gaussian simulated maximum-error quantiles]
 
 The main paper displays observed timing by date and the multiverse estimates and gains. The supplement shows the simulated spread estimates, absolute titi forecast errors, recording windows, and baboon errors by night. [Observed timings](notes/paper-draft.md#records-and-timing-measures) · [Supporting figures](notes/forecast-diagnostics.md)
 
-## Comparative waking follow-up
+## Bayesian sensitivity and paired endpoint comparison
 
-The Laikipia replication reconstructs waking from a later olive baboon archive and compares estimates and forecasts with and without troop effects. The Tibetan macaque analysis uses waking scored from video. The [feasibility notes](notes/comparative-waking-feasibility.md#replication-and-video-comparison) give the measurement definitions, source files, results, and reproduction commands.
+The first paper’s Bayesian sensitivity analysis refits all 16 Gaussian specifications and their matched baselines. The comparison and reproduction guide gives the priors, Stan build and run commands, forecast scores, sampling diagnostics, and effective sample sizes from reweighting. In the analysis files for the baboons, `onset` and `waking` identify the start and end of the selected sleep period. [First-paper Bayesian check](notes/first-paper-bayesian-check.md)
+
+The follow-up applies the published baboon bout rules to Huangshan macaque video scores and compares the resulting period end with last observed awakening on the same nights. The reproduction guide links the archived sources and gives commands for reconstructing both endpoints, running the matched Bayesian fits, and rebuilding the figures. It also documents the Laikipia trace audit, the coverage of the Mpala validation scores, and the interruption simulations. [Paired endpoint comparison and reproduction](notes/comparative-waking-feasibility.md#paired-endpoint-comparison-on-huangshan-video-scores)
 
 Original code and repository documentation are available under the [MIT License](LICENSE). Third-party papers and datasets retain their own terms.

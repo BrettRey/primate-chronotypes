@@ -33,12 +33,12 @@ Each forecast uses the mean or median timing among training observations, calcul
 | Outcome and evaluation | Records | Mean RMSE | Mean MAE | Median RMSE | Median MAE |
 |---|---:|---:|---:|---:|---:|
 | Titi activity onset, fixed | 325 | 33.28 | 23.22 | 33.26 | 23.31 |
-| Baboon sleep onset, fixed | 85 | 25.74 | 21.09 | 25.78 | 21.12 |
-| Baboon sleep onset, rolling | 156 | 31.56 | 22.40 | 31.41 | 22.29 |
-| Baboon sleep onset, late rolling | 85 | 25.85 | 21.25 | 25.85 | 21.22 |
-| Baboon final waking, fixed | 85 | 36.07 | 18.52 | 36.43 | 16.88 |
-| Baboon final waking, rolling | 156 | 42.40 | 21.13 | 43.36 | 20.97 |
-| Baboon final waking, late rolling | 85 | 36.12 | 18.45 | 36.43 | 16.88 |
+| Baboon period onset, fixed | 85 | 25.74 | 21.09 | 25.78 | 21.12 |
+| Baboon period onset, rolling | 156 | 31.56 | 22.40 | 31.41 | 22.29 |
+| Baboon period onset, late rolling | 85 | 25.85 | 21.25 | 25.85 | 21.22 |
+| Baboon period end, fixed | 85 | 36.07 | 18.52 | 36.43 | 16.88 |
+| Baboon period end, rolling | 156 | 42.40 | 21.13 | 43.36 | 20.97 |
+| Baboon period end, late rolling | 85 | 36.12 | 18.45 | 36.43 | 16.88 |
 
 ## Rolling forecast scores
 
@@ -59,18 +59,31 @@ The late portion of the rolling evaluation uses the same 85 records as the fixed
 
 ![Titi estimates across matched recording windows and signed baboon timing forecast errors on later nights](../analysis/results/primate-timing-diagnostics.png)
 
-**Figure S3.** Matched titi recording windows (top) and errors on 85 later baboon-nights (bottom). Each blue circle gives the ten-day minus longer-record estimate for one titi window. Numbers in parentheses count windows, which can overlap and share observations. Rust-coloured ticks mark medians and blue lines span the 10th to 90th percentiles. Each baboon observation contributes a sleep-onset error (triangle) and a final-waking error (square).
+**Figure S3.** Matched titi recording windows (top) and errors on 85 later baboon-nights (bottom). Each blue circle gives the ten-day minus longer-record estimate for one titi window. Numbers in parentheses count windows, which can overlap and share observations. Rust-coloured ticks mark medians and blue lines span the 10th to 90th percentiles. Each baboon observation contributes a selected-period onset error (triangle) and end-time error (square).
+
+## Bayesian sensitivity
+
+The matched Bayesian comparison covers all 16 Gaussian specifications and preserves their original terms, training records, holdouts and historical benchmarks. Four Stan chains sample under a half-normal prior with a 30-minute scale on the persistent standard deviation. I reweight the draws by the prior density ratio for the 15-minute scale and average forecasts over the posterior.
+
+| Outcome | Original fitted persistent SD (min) | Posterior medians across priors (min) |
+|---|---:|---:|
+| Baboon period onset | 10.6–10.7 | 10.3–11.2 |
+| Baboon period end | 0–3.2 | 2.4–3.5 |
+| Titi onset, 2023 cohort | 2.9–4.1 | 3.1–4.6 |
+| Titi onset, 2024 cohort | 13.2–15.6 | 13.2–16.7 |
+
+With the 30-minute prior, adding the persistent onset effect improved pooled rolling baboon RMSE by 0.12–0.54 minutes. On the same 85 observations as the fixed block, changes ranged from a 0.81-minute worsening to a 0.70-minute improvement. The 354 final fits had zero divergent transitions. Across monitored coefficients and scale parameters, the largest split R-hat was 1.010, and the smallest bulk and tail effective sample sizes were 299 and 115, respectively. The 15-minute prior weights retained at least 93.9% of the draws by the weight-based effective sample size calculation. The [comparison and reproduction guide](first-paper-bayesian-check.md) gives the full priors, forecast scores and per-fit diagnostics.
 
 ## Extreme errors and likelihood
 
-Each check takes the maximum absolute error across 85 records from 12 nights. The 2,000 simulated maxima per row use the same schedule, with a normal draw shared by animals on each night and an independent residual per observation. Fitted parameters and animal offsets are held fixed. The check also holds temporary offsets fixed when those terms appear in a specification. The quantiles summarise these conditional simulations. The matched maximum likelihood (ML) fits use the same 269 training records.
+Each check takes the maximum absolute error across 85 records from 12 nights. The 2,000 simulated maxima per row use the same schedule, with a normal draw shared by animals on each night and an independent residual per observation. Fitted parameters and animal offsets are held fixed. The check also holds temporary offsets fixed when those terms appear in a specification. The quantiles summarize these conditional simulations. The matched maximum likelihood (ML) fits use the same 269 training records.
 
 | Endpoint and fit for the simplest specification | Observed (min) | Simulated median (min) | Central 95% (min) | 99th percentile (min) |
 |---|---:|---:|---:|---:|
-| Onset, Gaussian restricted ML | 76 | 85 | 65–119 | 126 |
-| Waking, Gaussian restricted ML | 213 | 81 | 63–113 | 120 |
-| Waking, Gaussian ML | 213 | 81 | 62–112 | 119 |
-| Waking, Student-t ML with 3 degrees of freedom | 220 | 60 | 34–176 | 239 |
-| Waking, Student-t ML with 7 degrees of freedom | 219 | 49 | 34–90 | 108 |
+| Period onset, Gaussian restricted ML | 76 | 85 | 65–119 | 126 |
+| Period end, Gaussian restricted ML | 213 | 81 | 63–113 | 120 |
+| Period end, Gaussian ML | 213 | 81 | 62–112 | 119 |
+| Period end, Student-t ML with 3 degrees of freedom | 220 | 60 | 34–176 | 239 |
+| Period end, Student-t ML with 7 degrees of freedom | 219 | 49 | 34–90 | 108 |
 
 The main Gaussian analysis uses restricted maximum likelihood. The fixed degrees of freedom examine two tail weights with finite variance. Several freely estimated degrees-of-freedom fits were unstable, and usable fits suggested values near 1.3. At each fixed positive animal standard deviation, I reoptimized the remaining free parameters. At zero, I refitted the specification without the animal term. In the simplest Student-t fits, the negative log likelihood rose by 0.18 and 0.04 at zero for 3 and 7 degrees of freedom, and by 2.73 and 1.85 at 4 minutes. [Gaussian checks](../analysis/results/baboon-gaussian-error-maxima.csv) · [Matched likelihood and optimizer details](../analysis/results/baboon-waking-likelihood.csv) · [Profile grid](../analysis/results/baboon-waking-likelihood-profile.csv)

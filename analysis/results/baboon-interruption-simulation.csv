@@ -1,0 +1,5 @@
+interruption_starts,interruption_minutes,simulated_morning_waking,classified_onset,classified_end,classified_end_minutes_early
+,0,06:00,20:00,06:00,0
+01:00,44,06:00,20:00,06:00,0
+01:00,45,06:00,20:00,01:00,300
+23:00,45,06:00,23:45,06:00,0

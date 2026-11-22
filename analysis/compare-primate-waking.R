@@ -9,6 +9,11 @@ read_laikipia_nights <- function(pairs, reference) {
   nights
 }
 
+complete_laikipia_nights <- function(nights) {
+  complete <- ave(rep(1L, nrow(nights)), nights$day, FUN = length) == nlevels(nights$animal)
+  nights[complete, ]
+}
+
 forecast_split <- function(nights) {
   first_test <- baboon_late_start(sort(unique(nights$day)))
   train <- nights[nights$day < first_test, ]
@@ -63,9 +68,7 @@ main <- function(args) {
   laikipia <- read_laikipia_nights(args[1L], args[2L])
   macaques <- read_baboon_nights(args[3L], local_zone = "Asia/Shanghai")
   baboons <- read_baboon_nights("analysis/results/baboon-sleep-pairs.csv")
-  complete_dates <- ave(rep(1L, nrow(laikipia)), laikipia$day, FUN = length) ==
-    nlevels(laikipia$animal)
-  paired <- laikipia[complete_dates, ]
+  paired <- complete_laikipia_nights(laikipia)
   endpoints <- c("onset", "waking")
   estimates <- rbind(
     check_timing(baboons, "mpala_2012", endpoints),

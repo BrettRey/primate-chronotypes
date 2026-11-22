@@ -1,0 +1,9 @@
+"rule","temporary","prior_scale","cohort","persistent_lower","persistent_median","persistent_upper"
+"scored_awakening",FALSE,30,"common",1.86107069948,4.04756668678003,6.64485984030098
+"scored_awakening",FALSE,15,"common",1.8491002500504,4.03001349024107,6.57862166398737
+"longest_period_end",FALSE,30,"common",21.6242640202,48.0264635828008,75.7722168469603
+"longest_period_end",FALSE,15,"common",7.44460097837018,29.6526981039037,50.6663649360956
+"scored_awakening",TRUE,30,"common",0.764536431856999,3.74524003684005,6.56303047746342
+"scored_awakening",TRUE,15,"common",0.74378838212078,3.72050614582656,6.52631318174596
+"longest_period_end",TRUE,30,"common",14.3682698661,46.2790513440019,76.3633699625022
+"longest_period_end",TRUE,15,"common",3.9082204993687,25.5830748810535,48.7869601154822

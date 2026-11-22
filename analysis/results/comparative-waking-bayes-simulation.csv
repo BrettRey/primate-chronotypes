@@ -1,0 +1,5 @@
+"scenario","known_persistent_sd","prior_scale","cohort","persistent_lower","persistent_median","persistent_upper"
+"clean",0,30,"common",0.284430332284,4.20569731433002,27.7319701479068
+"clean",0,15,"common",0.262578309263926,3.7419171624622,18.1880258897781
+"interrupted",0,30,"common",8.02069974705,19.4070558072003,50.3286649997585
+"interrupted",0,15,"common",7.43400593512721,15.3778809140986,32.1173227678128

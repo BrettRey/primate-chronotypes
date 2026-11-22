@@ -93,8 +93,8 @@ draw_observations <- function(family) {
          lwd = median_line_width, seg.len = 0.65, merge = TRUE,
          bty = "n", horiz = TRUE, text.col = ink)
   draw_titi_panel()
-  draw_baboon_panel(baboons$day, baboons$onset, "Baboon sleep onset", seq(240, 720, by = 120))
-  draw_baboon_panel(baboons$day, baboons$waking, "Baboon final waking", seq(780, 1260, by = 120))
+  draw_baboon_panel(baboons$day, baboons$onset, "Baboon selected-period onset", seq(240, 720, by = 120))
+  draw_baboon_panel(baboons$day, baboons$waking, "Baboon selected-period end", seq(780, 1260, by = 120))
 }
 
 draw_recovery <- function(family) {

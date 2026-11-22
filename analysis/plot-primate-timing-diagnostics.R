@@ -80,7 +80,7 @@ draw_diagnostics <- function(family) {
     points(point_x, errors[[i]]$animal_error, pch = c(17, 15)[i],
            col = adjustcolor(colours[i], alpha.f = 0.65))
   }
-  legend("bottomright", legend = c("Sleep onset", "Final waking"), col = colours,
+  legend("bottomright", legend = c("Selected-period onset", "Selected-period end"), col = colours,
          pch = c(17, 15), horiz = TRUE, bty = "n", text.col = ink, cex = 0.9)
 }
 
