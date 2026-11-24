@@ -1,5 +1,5 @@
 render_primate_figure <- function(stem, draw, width, height) {
-  family <- "EB Garamond"
+  family <- Sys.getenv("PRIMATE_FIGURE_FONT", "EB Garamond")
   for (format in c("png", "pdf")) {
     path <- paste(stem, format, sep = ".")
     if (format == "png") {

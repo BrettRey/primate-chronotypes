@@ -65,6 +65,7 @@ draw_summary <- function(family) {
   par(mai = c(0.61, 0.16, 0.43, 0.18))
   panel(rep("", nrow(ti)), gain_xlim, gain_ticks, "Forecast RMSE gain (minutes)",
         "Later dates, 325 observations", reference = TRUE)
+  mtext("Baseline omits all animal effects", side = 3, line = 0, adj = 0, col = ink)
   points(ti$rmse_gain, ti_y[ti$spec], col = ink, pch = 16)
 
   ba <- subset(baboon_forecasts, endpoint == "onset")
@@ -91,6 +92,7 @@ draw_summary <- function(family) {
   par(mai = c(0.61, 0.16, 0.43, 0.18))
   panel(rep("", nrow(ba)), gain_xlim, gain_ticks, "Forecast RMSE gain (minutes)",
         "Later dates, 85 baboon-nights", reference = TRUE)
+  mtext("Baseline omits persistent animal effect", side = 3, line = 0, adj = 0, col = ink)
   fi <- endpoint_index(baboon_forecasts$endpoint)
   points(baboon_forecasts$rmse_gain, baboon_positions(baboon_forecasts),
          pch = endpoint_pch[fi], col = endpoint_col[fi], cex = 0.9)

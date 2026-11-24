@@ -114,6 +114,8 @@ Rscript analysis/plot-primate-timing-supplement.R
 Rscript analysis/titi-multiverse.R plot
 ```
 
+The figures in the journal submission snapshot use Arial. To regenerate them, install Arial and set `PRIMATE_FIGURE_FONT=Arial` before running each of the four commands above. With the variable unset, the commands use EB Garamond.
+
 The diagnostics command also writes [Gaussian simulated maximum-error quantiles](analysis/results/baboon-gaussian-error-maxima.csv) and [waking loss concentration by night](analysis/results/baboon-fixed-waking-error-concentration.csv).
 
 The main paper displays observed timing by date and the multiverse estimates and gains. The supplement shows the simulated spread estimates, absolute titi forecast errors, recording windows, and baboon errors by night. [Observed timings](notes/paper-draft.md#records-and-timing-measures) · [Supporting figures](notes/forecast-diagnostics.md)
