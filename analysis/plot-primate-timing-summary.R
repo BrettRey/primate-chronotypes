@@ -55,7 +55,8 @@ draw_summary <- function(family) {
   titi_col <- c(ink, blue, amber)
   titi_pch <- c(16, 17, 15)
 
-  par(mai = c(0.61, 1.96, 0.43, 0.12))
+  left_margin <- max(1.96, max(strwidth(ti$label, units = "inches", cex = par("cex.axis"))) + 0.25)
+  par(mai = c(0.61, left_margin, 0.43, 0.12))
   panel(ti$label, spread_xlim, spread_ticks, "Between-animal SD (minutes)", "Titi activity onset")
   segments(titi$lower_95, ty, titi$upper_95, ty, col = titi_col[ci], lwd = 1.6)
   points(titi$persistent_sd, ty, pch = titi_pch[ci], col = titi_col[ci], cex = 0.9)
@@ -80,7 +81,7 @@ draw_summary <- function(family) {
       c(0.15, -0.15)[endpoint_index(data$endpoint)]
   }
 
-  par(mai = c(0.61, 1.96, 0.43, 0.12))
+  par(mai = c(0.61, left_margin, 0.43, 0.12))
   panel(ba$label, spread_xlim, spread_ticks, "Between-animal SD (minutes)", "Baboon sleep timing")
   bi <- endpoint_index(baboon$endpoint)
   by <- baboon_positions(baboon)

@@ -69,6 +69,8 @@ draw_titi_panel <- function() {
 }
 
 draw_baboon_panel <- function(day, timing, title, ticks) {
+  label_margin <- par(mgp = c(3, 0.52, 0))
+  on.exit(par(label_margin))
   limits <- range(ticks)
   stopifnot(all(is.finite(timing)), all(timing >= limits[1L] & timing <= limits[2L]))
   par(mai = c(0.55, 0.78, 0.34, 0.17))
