@@ -165,7 +165,8 @@ plot_observed <- function() {
 
   draw <- function(family) {
     primate_figure_text(family)
-    par(mai = c(0.59, 1.96, 0.38, 0.22))
+    label_margin <- max(1.96, max(strwidth(labels, units = "inches", cex = par("cex.axis"))) + 0.25)
+    par(mai = c(0.59, label_margin, 0.38, 0.22))
     ticks <- pretty(c(forecasts$baseline_rmse, forecasts$animal_rmse), n = 6)
     plot(NA_real_, xlim = range(ticks), ylim = c(0.45, 9.25), xaxs = "i", yaxs = "i",
          xlab = "Fixed-holdout RMSE (minutes)", ylab = "", axes = FALSE)

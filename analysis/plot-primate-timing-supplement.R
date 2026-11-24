@@ -69,13 +69,12 @@ draw_titi_panel <- function() {
 }
 
 draw_baboon_panel <- function(day, timing, title, ticks) {
-  label_margin <- par(mgp = c(3, 0.52, 0))
-  on.exit(par(label_margin))
   limits <- range(ticks)
   stopifnot(all(is.finite(timing)), all(timing >= limits[1L] & timing <= limits[2L]))
-  par(mai = c(0.55, 0.78, 0.34, 0.17))
-  plot(day, timing, type = "n", axes = FALSE, xlab = "Date", ylab = "Local clock time",
+  par(mai = c(0.55, 0.86, 0.34, 0.17))
+  plot(day, timing, type = "n", axes = FALSE, xlab = "Date", ylab = "",
        ylim = limits, yaxs = "i")
+  mtext("Local clock time", side = 2, line = 3.1, col = ink)
   date_ticks <- seq(min(day), max(day), length.out = 5L)
   axis(1, at = date_ticks, labels = format(date_ticks, "%d %b"), col = ink, col.axis = ink)
   axis(2, at = ticks, labels = clock_labels(ticks), las = 1, col = ink, col.axis = ink)
