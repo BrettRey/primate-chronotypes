@@ -2,6 +2,8 @@
 
 An early research project on how consistently individual nonhuman primates differ in the timing of sleep and activity across days and settings.
 
+Two related methods papers were sent to journals on 24 November 2026. “How the choice of sleep endpoint changes estimates of individual variation in primates” was submitted to *Primates*. “Individual variation and forecast accuracy in titi monkey activity onset and olive baboon sleep timing” was sent to *Animal Behavior and Cognition*; acknowledgment is pending. The [endpoint-paper reproduction snapshot](https://github.com/BrettRey/primate-chronotypes/archive/d876cee9e3135cce0d695e1008a66afff1acddf5.zip) and [forecasting-paper reproduction snapshot](https://github.com/BrettRey/primate-chronotypes/archive/ee691da7a916711c82f7a4dd5d81d68560172ccc.zip) preserve the respective submission analyses and figures.
+
 See [AGENTS.md](AGENTS.md) for contributor guidance. Its workspace links apply to the parent portfolio checkout.
 
 ## Titi monkey simulation
@@ -42,7 +44,7 @@ Each ten-day window is paired with an expanding earlier record ending on the sam
 
 The [paired endpoint table](analysis/results/baboon-sleep-pairs.csv) contains 354 baboon-nights from 22 animals across 34 night dates. We recovered the sequence reported by Loftus et al. (2022). The 506 recorded tag-nights yielded 491 classified sleep periods, 368 after the recording coverage exclusion, and 354 after the recording gap exclusion. The animals contributed between 1 and 30 paired nights, with a median of 21. Two animals contributed one night each. [Study, Figure 1 and Methods](https://doi.org/10.7554/eLife.73695)
 
-Each row identifies a tag and gives the estimated sleep onset and final waking from its longest classified sleep period. Timestamps use East Africa Time (UTC+03:00). The night date is the local calendar date at the start of the noon-to-noon interval. The script reconstructs the timing measurements from accelerometer bursts using the published workflow. [Authors' code at the retrieved revision](https://github.com/CarterLoftus/baboon_sleep/tree/5b5dff9780a1e8084a9a6aa73281d066f204e091/CODE/main_analysis)
+Each row identifies a tag and gives the beginning and end of its longest classified sleep period. These boundaries are not necessarily the first sleep onset or final awakening. Timestamps use East Africa Time (UTC+03:00). The night date is the local calendar date at the start of the noon-to-noon interval. The script reconstructs the timing measurements from accelerometer bursts using the published workflow. [Authors' code at the retrieved revision](https://github.com/CarterLoftus/baboon_sleep/tree/5b5dff9780a1e8084a9a6aa73281d066f204e091/CODE/main_analysis)
 
 Download the four `Collective movement in wild baboons-acc-*.csv.zip` files to one directory. The script verifies each file against the archive checksum and handles the duplicate events at the three file boundaries. This command was checked with Python 3.14.10 and NumPy 2.4.2. [Movebank archive, retrieved 2026-11-21, CC0](https://doi.org/10.5441/001/1.3q2131q5)
 
